@@ -1,0 +1,44 @@
+pipeline {
+    agent any
+	parameters {
+        gitParameter name: 'TAG',
+                     type: 'PT_TAG',
+                     defaultValue: 'master'
+    }
+
+    stages {
+        
+        stage('Pick a tag') {
+            steps {
+                checkout([$class: 'GitSCM',
+                          branches: [[name: "${params.TAG}"]],
+                          doGenerateSubmoduleConfigurations: false,
+                          extensions: [],
+                          gitTool: 'Default',
+                          submoduleCfg: [],
+        				  userRemoteConfigs: [[
+        					credentialsId: 'myCredentialsId', 
+        					refspec: '+refs/tags/*:refs/remotes/origin/tags/*', 
+        					url: 'https://github.com/swordine/webmethods-sample-project-layout.git']]
+                        ])
+            }
+        }
+        
+        stage('Build'){
+            steps {
+                bat "${env.SAG_HOME}/common/AssetBuildEnvironment/ant/bin/ant -DSAGHome=${env.SAG_HOME} -DSAG_CI_HOME=${env.SAG_CI_HOME} -DprojectName=${env.JOB_NAME} build"
+            }
+        }
+        stage('Deploy') {
+            steps {
+		bat "${env.SAG_HOME}/common/AssetBuildEnvironment/ant/bin/ant -DSAGHome=${env.SAG_HOME} -DSAG_CI_HOME=${env.SAG_CI_HOME} -DprojectName=${env.JOB_NAME} deploy"
+            }
+        }
+ 	stage('Test') {
+            steps {
+		bat "${env.SAG_HOME}/common/AssetBuildEnvironment/ant/bin/ant -DSAGHome=${env.SAG_HOME} -DSAG_CI_HOME=${env.SAG_CI_HOME} -DprojectName=${env.JOB_NAME} test"
+		junit 'report/'
+            }
+        }
+    }
+}
