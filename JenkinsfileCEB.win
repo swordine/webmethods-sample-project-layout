@@ -1,6 +1,6 @@
 pipeline {
     agent any
-    echo ${Targets}
+    
     /*
 	parameters {
         gitParameter name: 'TAG',
@@ -27,6 +27,7 @@ pipeline {
         }
      */
         stage('Build'){
+	    echo ${Targets}
             steps {
                 bat "${env.SAG_HOME}/common/AssetBuildEnvironment/ant/bin/ant -DSAGHome=${env.SAG_HOME} -DSAG_CI_HOME=${env.SAG_CI_HOME} -DprojectName=${env.JOB_NAME} build"
             }
